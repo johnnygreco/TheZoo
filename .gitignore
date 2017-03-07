@@ -5,3 +5,10 @@ cats
 results
 images
 .DS_Store
+
+cats/*
+!cats/.gitkeep
+results/*
+!results/.gitkeep
+images/*
+!images/.gitkeep
