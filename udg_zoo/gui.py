@@ -19,12 +19,14 @@ from .utils import hsc_map_url
 filedir = os.path.dirname(__file__)
 maindir = os.path.dirname(filedir)
 
+io = os.path.join(maindir, 'io')
+
 cat_fn = 'cats/candy.csv'
 out_fn = 'results/viz-'+cat_fn.split('/')[-1]
-cat_fn = os.path.join(maindir, cat_fn)
-out_fn = os.path.join(maindir, out_fn)
+cat_fn = os.path.join(io, cat_fn)
+out_fn = os.path.join(io, out_fn)
 
-__all__ = ['maindir', 'GUI']
+__all__ = ['GUI']
 
 class GUI(object):
 
@@ -232,7 +234,7 @@ class GUI(object):
         self.ax.cla()
         self.ax.set(xticks=[], yticks=[])
         fn = 'images/candy-{}.png'.format(self.current_idx)
-        image = mpimg.imread(os.path.join(filedir, fn))
+        image = mpimg.imread(os.path.join(io, fn))
         self.ax.imshow(image)
         self.canvas.draw()
 

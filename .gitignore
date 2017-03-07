@@ -3,9 +3,5 @@
 .*swp
 .DS_Store
 
-cats/*
-!cats/.gitkeep
-results/*
-!results/.gitkeep
-udg_zoo/images/*
-!udg_zoo/images/.gitkeep
+io/*
+!io/.gitkeep
