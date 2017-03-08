@@ -52,7 +52,6 @@ class GUI(object):
                     self.cat = self.cat[self.cat[review]==1]
                     self.cat_idx = self.cat.index
                     self.cat.reset_index(inplace=True)
-
             else:
                 msg = 'Catalog exists. Want to start where you left off?'
                 answer = messagebox.askyesno('HSC-HUGs Message', msg)
@@ -77,7 +76,7 @@ class GUI(object):
             self._load_cat(cat_fn)
 
         # build figure
-        fs = 16
+        fs = 15
         self.fig = Figure(figsize=(10, 6))
         adjust = dict(wspace=0.13, 
                       hspace=0.25, 
