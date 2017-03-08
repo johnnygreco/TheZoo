@@ -5,7 +5,7 @@
 1. Clone this repository:
 	
 	```sh
-	git clone git@github.com:johnnygreco/udg-zoo.git
+	git clone https://github.com/johnnygreco/udg-zoo.git
 	```
 
 2. Get the contents of the `io` directory from me
