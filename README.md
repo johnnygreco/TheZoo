@@ -2,17 +2,19 @@
 
 ## Installation
 
-Clone this repository:
+1) Clone this repository:
 
 ```sh
 git clone git@github.com:johnnygreco/udg-zoo.git
 ```
 
-If you don't have conda installed, get it:
+2) Get the contents of the `io` directory from me
+
+3) If you don't have conda installed, get it:
 
 - [conda](https://conda.io/miniconda.html)
 	
-Then, from within the udg-zoo directory, create a new conda enviornment with the necessary packages, activate the environment, and run the application: 
+4) From within the udg-zoo directory, create a new conda enviornment with the necessary packages, activate the environment, and run the application: 
 
 ```sh
 conda env create -f environment.yml
