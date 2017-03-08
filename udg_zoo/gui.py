@@ -38,7 +38,6 @@ class GUI(object):
         self.master = master
         self.save_delta_t = 5 # minutes
         self.current_idx = 0
-        self.rgb_kw = dict(Q=8, dataRange=0.3)
         self.flags = ['candy', 'junk', 'tidal', 'ambiguous']
         self.master.withdraw()
         self.review = review
