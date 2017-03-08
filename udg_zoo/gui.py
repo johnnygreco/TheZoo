@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 
 import os, sys
+import warnings
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox
@@ -11,7 +12,8 @@ import numpy as np
 import matplotlib 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-#matplotlib.use("TkAgg")
+import matplotlib.gridspec as gridspec
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -94,8 +96,34 @@ class GUI(object):
         bot_fr.pack(side='bottom', expand=0, pady=10)
         mid_fr.pack(side='bottom', expand=0)
 
-        self.fig = Figure(figsize=(6, 6))
-        self.ax = self.fig.add_subplot(111)
+        # build figure
+        fs = 16
+        self.fig = Figure(figsize=(10, 6))
+        adjust = dict(wspace=0.13, 
+                      hspace=0.25, 
+                      bottom=0.1, 
+                      top=0.97, 
+                      right=0.96,
+                      left=-0.02)
+        grid = gridspec.GridSpec(2, 3, **adjust)
+        self.ax_img = self.fig.add_subplot(
+            grid[0:2, 0:2], xticks=[], yticks=[])
+        self.ax_top = self.fig.add_subplot(grid[0,2])
+        self.ax_bot = self.fig.add_subplot(grid[1,2])
+        self.ax_top.scatter(self.cat['g-i'], self.cat['g-r'], alpha=0.5)
+        self.ax_top.set_xlabel('$g-i$', fontsize=fs)
+        self.ax_top.set_ylabel('$g-r$', fontsize=fs)
+        self.ax_top.set_xlim(-0.08, 1.8)
+        self.ax_top.set_ylim(-0.08, 1.5)
+        self.ax_bot.scatter(self.cat['FLUX_RADIUS(i)']*0.168, 
+                            self.cat['mu_aper_0(g)'], alpha=0.5)
+        self.ax_bot.set_xlabel('$r_{1/2}\ \mathrm{[arcsec]}$', fontsize=fs)
+        self.ax_bot.set_ylabel('$\mu_0(g)\ \mathrm{[mag/arcsec^2]}$', 
+                               fontsize=fs)
+        self.ax_bot.set_xlim(2.0, 10)
+        self.ax_bot.set_ylim(23.8, 27.8)
+        self.p1 = None
+        self.p2 = None
 
         # create bottom buttons
         tk.Label(bot_fr, text='Source Index').grid(
@@ -178,8 +206,9 @@ class GUI(object):
         self.master.bind_all('<1>', lambda event: event.widget.focus_set())
 
         # build canvas
-        self.fig.set_tight_layout(True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
+
+
         self.display_image()
         self.canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
         self.master.deiconify()
@@ -193,7 +222,6 @@ class GUI(object):
         if self.subset_fn is not None:
             mask = np.loadtxt(self.subset_fn, dtype=bool)
             self.cat = self.cat.loc[mask].copy()
-
         self.cat['candy'] = -1
         self.cat['junk'] = -1
         self.cat['tidal'] = -1
@@ -231,19 +259,31 @@ class GUI(object):
 
     def display_image(self):
         self.update_info()
-        self.ax.cla()
-        self.ax.set(xticks=[], yticks=[])
+        self.ax_img.cla()
+        self.ax_img.set(xticks=[], yticks=[])
         fn = 'images/candy-{}.png'.format(self.current_idx)
         image = mpimg.imread(os.path.join(io, fn))
-        self.ax.imshow(image)
+        self.ax_img.imshow(image)
+
+        idx = self.current_idx
+        if self.p1 is not None:
+            self.p1.remove()
+            self.p2.remove()
+        self.p1 = self.ax_top.scatter(self.cat.loc[idx, 'g-i'], 
+                                      self.cat.loc[idx, 'g-r'], 
+                                      c='k', s=300, marker='*', edgecolor='k')
+        self.p2 = self.ax_bot.scatter(self.cat.loc[idx, 'FLUX_RADIUS(i)']*0.168, 
+                                      self.cat.loc[idx, 'mu_aper_0(g)'],
+                                      c='k', s=300, marker='*', edgecolor='k')
         self.canvas.draw()
 
     def update_info(self):
-        txt = 'r: {:.2f} arcsec - mu_0(g): {:.2f} - flag: {}'
-        cols = ['r_e(g)', 'mu_0(g)']
+        txt = 'r_eff: {:.2f}\"    mu_0(g): {:.2f}    g-i: {:.2f}'
+        txt += '    g-r: {:.2f}    class: {}'
+        cols = ['r_e(g)', 'mu_0(g)', 'g-i', 'g-r']
         flag_cols = cols + self.flags
         info = self.cat.ix[self.current_idx, flag_cols]
-        size, mu = info[cols]
+        size, mu, gi, gr = info[cols]
         flags = info[self.flags]
         flag = flags[flags==1]
         if len(flag)==1:
@@ -253,7 +293,7 @@ class GUI(object):
         if (self.review is not None) and (self.review != 'all'):
             txt = txt.replace('flag') 
             flag = self.cat_idx[self.current_idx]
-        txt = txt.format(size, mu, flag)
+        txt = txt.format(size, mu, gi, gr, flag)
         self.status.config(state='normal')
         self.status.delete(1.0, 'end')
         self.status.insert('insert', txt)

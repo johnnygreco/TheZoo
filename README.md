@@ -1,7 +1,13 @@
-# udg-zoo
+# The UDG-Zoo
 
 ## Installation
-----------------
+
+Clone this repository:
+
+```sh
+git clone git@github.com:johnnygreco/udg-zoo.git
+```
+
 If you don't have conda installed, get it:
 
 - [conda](https://conda.io/miniconda.html)
