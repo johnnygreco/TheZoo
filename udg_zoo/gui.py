@@ -1,7 +1,6 @@
 from __future__ import division, print_function
 
 import os, sys
-import warnings
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox
