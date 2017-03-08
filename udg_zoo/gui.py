@@ -9,16 +9,17 @@ import webbrowser
 
 import numpy as np
 import matplotlib 
+matplotlib.use("TkAgg")
+matplotlib.rcParams['font.family'] = 'serif'
+matplotlib.rcParams['mathtext.fontset'] = 'cm'
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from .utils import hsc_map_url
 filedir = os.path.dirname(__file__)
 maindir = os.path.dirname(filedir)
-
 io = os.path.join(maindir, 'io')
 
 cat_fn = 'cats/candy.csv'

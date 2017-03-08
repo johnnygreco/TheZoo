@@ -16,7 +16,7 @@
 4. From within the udg-zoo directory, create a new conda enviornment with the necessary packages, activate the environment, and run the application: 
 
 	```sh
-	conda env create -f environment.yml
+	conda env create
 	source activate udg-zoo
 	./enter-the-zoo.py
 	```
