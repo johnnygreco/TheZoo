@@ -6,8 +6,7 @@ from udg_zoo import GUI
 
 parser = ArgumentParser('view candidates')
 parser.add_argument('-r', '--review', type=str, default=None)
-parser.add_argument('-s', '--subset', type=str, 
-                    help='subset file name', default=None)
+parser.add_argument('-c', '--clobber', action='store_true')
 args = parser.parse_args()
 
 title = u'hugs-pipe viz inspect'
@@ -19,7 +18,7 @@ root.withdraw()
 top = tk.Toplevel(root)
 top.protocol("WM_DELETE_WINDOW", root.destroy)
 top.title(title)
-gui = GUI(root, top, args.review, args.subset)
+gui = GUI(root, top, args.review, args.clobber)
 
 while True:
     try:

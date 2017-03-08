@@ -12,7 +12,6 @@ import numpy as np
 import matplotlib 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -32,7 +31,7 @@ __all__ = ['GUI']
 
 class GUI(object):
 
-    def __init__(self, root, master, review, subset_fn=None):
+    def __init__(self, root, master, review, clobber=False):
 
         # initialize attributes
         self.root = root
@@ -40,19 +39,13 @@ class GUI(object):
         self.save_delta_t = 5 # minutes
         self.current_idx = 0
         self.rgb_kw = dict(Q=8, dataRange=0.3)
-        self.is_new_idx = True
-        self.ell_visible = False
         self.flags = ['candy', 'junk', 'tidal', 'ambiguous']
-        self._coord = None
         self.master.withdraw()
         self.review = review
-        self.subset_fn = subset_fn
         self.out_fn = out_fn 
-        if subset_fn is not None:
-            self.out_fn = self.out_fn[:-4]+'-'+subset_fn
 
         # if output catalog exists, check if we want to reload progress
-        if os.path.isfile(self.out_fn):
+        if os.path.isfile(self.out_fn) and not clobber:
             if review:
                 self.cat = pd.read_csv(self.out_fn)
                 if review != 'all':
@@ -83,6 +76,35 @@ class GUI(object):
         else:
             self._load_cat(cat_fn)
 
+        # build figure
+        fs = 16
+        self.fig = Figure(figsize=(10, 6))
+        adjust = dict(wspace=0.13, 
+                      hspace=0.25, 
+                      bottom=0.1, 
+                      top=0.97, 
+                      right=0.96,
+                      left=-0.02)
+        grid = plt.GridSpec(2, 3, **adjust)
+        self.ax_img = self.fig.add_subplot(
+            grid[0:2, 0:2], xticks=[], yticks=[])
+        self.ax_top = self.fig.add_subplot(grid[0,2])
+        self.ax_bot = self.fig.add_subplot(grid[1,2])
+        self.ax_top.scatter(self.cat['g-i'], self.cat['g-r'], alpha=0.4)
+        self.ax_top.set_xlabel('$g-i$', fontsize=fs)
+        self.ax_top.set_ylabel('$g-r$', fontsize=fs)
+        self.ax_top.set_xlim(-0.08, 1.8)
+        self.ax_top.set_ylim(-0.08, 1.5)
+        self.ax_bot.scatter(self.cat['FLUX_RADIUS(i)']*0.168, 
+                            self.cat['mu_aper_0(g)'], alpha=0.4)
+        self.ax_bot.set_xlabel('$r_{1/2}\ \mathrm{[arcsec]}$', fontsize=fs)
+        self.ax_bot.set_ylabel('$\mu_0(g)\ \mathrm{[mag/arcsec^2]}$', 
+                               fontsize=fs)
+        self.ax_bot.set_xlim(2.0, 10)
+        self.ax_bot.set_ylim(23.8, 27.8)
+        self.p1 = None
+        self.p2 = None
+
         top_fr = tk.Frame(self.master)
         mid_fr = tk.Frame(self.master)
         bot_fr = tk.Frame(self.master)
@@ -96,35 +118,6 @@ class GUI(object):
         bot_fr.pack(side='bottom', expand=0, pady=10)
         mid_fr.pack(side='bottom', expand=0)
 
-        # build figure
-        fs = 16
-        self.fig = Figure(figsize=(10, 6))
-        adjust = dict(wspace=0.13, 
-                      hspace=0.25, 
-                      bottom=0.1, 
-                      top=0.97, 
-                      right=0.96,
-                      left=-0.02)
-        grid = gridspec.GridSpec(2, 3, **adjust)
-        self.ax_img = self.fig.add_subplot(
-            grid[0:2, 0:2], xticks=[], yticks=[])
-        self.ax_top = self.fig.add_subplot(grid[0,2])
-        self.ax_bot = self.fig.add_subplot(grid[1,2])
-        self.ax_top.scatter(self.cat['g-i'], self.cat['g-r'], alpha=0.5)
-        self.ax_top.set_xlabel('$g-i$', fontsize=fs)
-        self.ax_top.set_ylabel('$g-r$', fontsize=fs)
-        self.ax_top.set_xlim(-0.08, 1.8)
-        self.ax_top.set_ylim(-0.08, 1.5)
-        self.ax_bot.scatter(self.cat['FLUX_RADIUS(i)']*0.168, 
-                            self.cat['mu_aper_0(g)'], alpha=0.5)
-        self.ax_bot.set_xlabel('$r_{1/2}\ \mathrm{[arcsec]}$', fontsize=fs)
-        self.ax_bot.set_ylabel('$\mu_0(g)\ \mathrm{[mag/arcsec^2]}$', 
-                               fontsize=fs)
-        self.ax_bot.set_xlim(2.0, 10)
-        self.ax_bot.set_ylim(23.8, 27.8)
-        self.p1 = None
-        self.p2 = None
-
         # create bottom buttons
         tk.Label(bot_fr, text='Source Index').grid(
             row=0, column=0, sticky='w')
@@ -134,13 +127,21 @@ class GUI(object):
         idx_entry.grid(row=0, column=1, sticky='w', padx=8)
         idx_entry.bind('<Return>', self.set_idx)
 
+        tk.Label(bot_fr, text='Notes').grid(
+            row=1, column=0, sticky='w')
+        self.note_evar= tk.StringVar()
+        self.note_evar.set(self.cat.loc[self.current_idx, 'notes'])
+        note_entry = tk.Entry(bot_fr, textvariable=self.note_evar, takefocus=0)
+        note_entry.grid(row=1, column=1, sticky='nsew', padx=8, columnspan=15)
+        note_entry.bind('<Return>', self.add_note)
+
         prev_button = tk.Button(
             bot_fr, text='Previous', command=self.prev_idx)
-        prev_button.grid(row=0, column=4, padx=12, sticky='w', columnspan=5)
+        prev_button.grid(row=0, column=4, padx=12, sticky='nsew', columnspan=5)
 
         next_button = tk.Button(
             bot_fr, text='Next', command=self.next_idx)
-        next_button.grid(row=0, column=9, sticky='w', columnspan=5)
+        next_button.grid(row=0, column=9, sticky='nsew', columnspan=5)
 
         padx = 15
         if not review:
@@ -185,13 +186,6 @@ class GUI(object):
                 top_fr, text='Save Progess', command=self.save_progress)
             save_button.pack(side='left', padx=padx)
 
-            # useful key bindings
-            self.master.bind('s', self.save_progress)
-            self.master.bind('1', up_flag)
-            self.master.bind('2', down_flag)
-            self.master.bind('3', tidal_flag)
-            self.master.bind('4', question_flag)
-
         # create top buttons
         hmap_button = tk.Button(
             top_fr, text='hscMap', command=self.hsc_map)
@@ -201,14 +195,10 @@ class GUI(object):
         quit_button.pack(side='left', padx=padx)
 
         # useful key bindings
-        self.master.bind('<Down>', self.prev_idx)
-        self.master.bind('<Up>', self.next_idx)
         self.master.bind_all('<1>', lambda event: event.widget.focus_set())
 
         # build canvas
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
-
-
         self.display_image()
         self.canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
         self.master.deiconify()
@@ -219,15 +209,14 @@ class GUI(object):
 
     def _load_cat(self, cat_fn):
         self.cat = pd.read_csv(cat_fn)
-        if self.subset_fn is not None:
-            mask = np.loadtxt(self.subset_fn, dtype=bool)
-            self.cat = self.cat.loc[mask].copy()
         self.cat['candy'] = -1
         self.cat['junk'] = -1
         self.cat['tidal'] = -1
         self.cat['ambiguous'] = -1
+        self.cat['notes'] = " "
 
     def next_idx(self, event=None):
+        self.add_note()
         self.current_idx += 1
         if self.current_idx > (len(self.cat)-1):
             msg = 'Congrats, visual inspection complete!'
@@ -237,20 +226,22 @@ class GUI(object):
             w.destroy()
             self.quit()
         else:
-            self.is_new_idx = True
             self.idx_evar.set(self.current_idx)
+            self.note_evar.set(self.cat.loc[self.current_idx, 'notes'])
             self.display_image()
 
     def prev_idx(self, event=None):
-        if self.current_idx >0:
+        if self.current_idx > 0:
+            self.add_note()
             self.current_idx -= 1
-            self.is_new_idx = True
             self.idx_evar.set(self.current_idx)
+            self.note_evar.set(self.cat.loc[self.current_idx, 'notes'])
             self.display_image()
 
     def set_idx(self, event=None):
+        self.add_note()
         self.current_idx = self.idx_evar.get()
-        self.is_new_idx = True
+        self.note_evar.set(self.cat.loc[self.current_idx, 'notes'])
         self.display_image()
 
     def hsc_map(self):
@@ -291,7 +282,7 @@ class GUI(object):
         else:
             flag = 'n/a'
         if (self.review is not None) and (self.review != 'all'):
-            txt = txt.replace('flag') 
+            txt = txt.replace('class', 'idx')
             flag = self.cat_idx[self.current_idx]
         txt = txt.format(size, mu, gi, gr, flag)
         self.status.config(state='normal')
@@ -304,6 +295,10 @@ class GUI(object):
         others = [f for f in self.flags if f!=flag]
         self.cat.loc[self.current_idx, others] = 0
         self.next_idx()
+
+    def add_note(self, event=None):
+        note = self.note_evar.get()
+        self.cat.loc[self.current_idx, 'notes'] = note
 
     def save_progress(self, event=None):
         if self.review:
