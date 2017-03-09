@@ -47,10 +47,6 @@ class GUI(object):
         if os.path.isfile(self.out_fn) and not clobber:
             if review:
                 self.cat = pd.read_csv(self.out_fn)
-                if review != 'all':
-                    self.cat = self.cat[self.cat[review]==1]
-                    self.cat_idx = self.cat.index
-                    self.cat.reset_index(inplace=True)
             else:
                 msg = 'Catalog exists. Want to start where you left off?'
                 answer = messagebox.askyesno('HSC-HUGs Message', msg)
@@ -279,9 +275,6 @@ class GUI(object):
             flag = flag.index[0]
         else:
             flag = 'n/a'
-        if (self.review is not None) and (self.review != 'all'):
-            txt = txt.replace('class', 'idx')
-            flag = self.cat_idx[self.current_idx]
         txt = txt.format(size, mu, gi, gr, flag)
         self.status.config(state='normal')
         self.status.delete(1.0, 'end')
