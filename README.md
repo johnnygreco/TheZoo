@@ -20,3 +20,7 @@
 	source activate udg-zoo
 	./enter-the-zoo.py
 	```
+
+## Screen Shot
+
+![](screenshot.png)
