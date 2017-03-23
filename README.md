@@ -23,4 +23,4 @@
 
 ## Screen Shot
 
-![](screenshot.png)
+![](screen-shot.png)
