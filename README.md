@@ -19,7 +19,8 @@
 	conda env create
 	source activate udg-zoo
 	```
-You can deactivate the environment with
+	
+	You can deactivate the environment with
 
 	```sh 
 	source deactivate
