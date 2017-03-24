@@ -4,7 +4,7 @@ import tkinter as tk
 from argparse import ArgumentParser
 from udg_zoo import GUI
 
-parser = ArgumentParser('view candidates')
+parser = ArgumentParser(__file__)
 parser.add_argument('-r', '--review', action='store_true', 
                     help='review without classification')
 parser.add_argument('-c', '--clobber', action='store_true', 
