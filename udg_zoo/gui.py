@@ -20,18 +20,13 @@ from matplotlib.figure import Figure
 from .utils import hsc_map_url
 filedir = os.path.dirname(__file__)
 maindir = os.path.dirname(filedir)
-io = os.path.join(maindir, 'io')
-
-cat_fn = 'cats/candy.csv'
-out_fn = 'results/viz-'+cat_fn.split('/')[-1]
-cat_fn = os.path.join(io, cat_fn)
-out_fn = os.path.join(io, out_fn)
+default_io = os.path.join(maindir, 'io')
 
 __all__ = ['GUI']
 
 class GUI(object):
 
-    def __init__(self, root, master, review, clobber=False):
+    def __init__(self, root, master, review, clobber=False, io=None):
 
         # initialize attributes
         self.root = root
@@ -41,7 +36,13 @@ class GUI(object):
         self.flags = ['candy', 'junk', 'tidal', 'ambiguous']
         self.master.withdraw()
         self.review = review
-        self.out_fn = out_fn 
+        self.io = io if io else default_io
+
+        # setup file names 
+        # TODO -- make this a cmd line arg
+        self.cat_fn = os.path.join(self.io, 'cats/candy.csv')
+        self.out_fn = os.path.join(
+            self.io, 'results/viz-'+self.cat_fn.split('/')[-1])
 
         # if output catalog exists, check if we want to reload progress
         if os.path.isfile(self.out_fn) and not clobber:
@@ -63,12 +64,12 @@ class GUI(object):
                     verify = messagebox.askyesno(
                         'Verify', 'Progress will be lost, okay?', default='no')
                     if verify:
-                        self._load_cat(cat_fn)
+                        self._load_cat(self.cat_fn)
                     else:
                         self.root.destroy()
                         sys.exit('Exiting without changing anything...')
         else:
-            self._load_cat(cat_fn)
+            self._load_cat(self.cat_fn)
 
         # build figure
         fs = 15
@@ -247,7 +248,7 @@ class GUI(object):
         self.ax_img.cla()
         self.ax_img.set(xticks=[], yticks=[])
         fn = 'images/candy-{}.png'.format(self.current_idx)
-        image = mpimg.imread(os.path.join(io, fn))
+        image = mpimg.imread(os.path.join(self.io, fn))
         self.ax_img.imshow(image)
 
         idx = self.current_idx
