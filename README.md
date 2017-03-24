@@ -8,12 +8,12 @@
 	git clone https://github.com/johnnygreco/udg-zoo.git
 	```
 
-2. Get the contents of the `io` directory from me
+2. Get `io` directory from me and place in the `udg-zoo` directory
 
 3. If you don't have conda installed, get it:
 	* [conda](https://conda.io/miniconda.html)
 	
-4. From within the udg-zoo directory, create a new conda enviornment with the necessary packages and activate the environment: 
+4. From within the `udg-zoo` directory, create a new conda enviornment with the necessary packages and activate the environment: 
 
 	```sh
 	conda env create
@@ -28,7 +28,7 @@
 	
 ## Usage
 
-From within the udg-zoo directory, run the application with
+From within the `udg-zoo` directory, run the application with
 
 ```sh
 ./enter-the-zoo.py

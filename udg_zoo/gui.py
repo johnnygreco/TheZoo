@@ -40,9 +40,9 @@ class GUI(object):
 
         # setup file names 
         # TODO -- make this a cmd line arg
-        self.cat_fn = os.path.join(self.io, 'cats/candy.csv')
+        self.cat_fn = os.path.join(self.io, 'candy.csv')
         self.out_fn = os.path.join(
-            self.io, 'results/viz-'+self.cat_fn.split('/')[-1])
+            self.io, 'viz-results-'+self.cat_fn.split('/')[-1])
 
         # if output catalog exists, check if we want to reload progress
         if os.path.isfile(self.out_fn) and not clobber:
