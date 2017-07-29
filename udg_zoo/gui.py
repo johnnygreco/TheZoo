@@ -85,18 +85,21 @@ class GUI(object):
             grid[0:2, 0:2], xticks=[], yticks=[])
         self.ax_top = self.fig.add_subplot(grid[0,2])
         self.ax_bot = self.fig.add_subplot(grid[1,2])
-        self.ax_top.scatter(self.cat['g-i'], self.cat['g-r'], alpha=0.4)
+        self.ax_top.scatter(self.cat['g-i'], self.cat['g-r'], alpha=0.3)
         self.ax_top.set_xlabel('$g-i$', fontsize=fs)
         self.ax_top.set_ylabel('$g-r$', fontsize=fs)
-        self.ax_top.set_xlim(-0.08, 1.8)
-        self.ax_top.set_ylim(-0.08, 1.5)
-        self.ax_bot.scatter(self.cat['FLUX_RADIUS(i)']*0.168, 
-                            self.cat['mu_aper_0(g)'], alpha=0.4)
-        self.ax_bot.set_xlabel('$r_{1/2}\ \mathrm{[arcsec]}$', fontsize=fs)
-        self.ax_bot.set_ylabel('$\mu_0(g)\ \mathrm{[mag/arcsec^2]}$', 
-                               fontsize=fs)
-        self.ax_bot.set_xlim(2.0, 10)
-        self.ax_bot.set_ylim(23.8, 27.8)
+        self.ax_top.set_xlim(self.cat['g-i'].min()-0.1, 
+                             self.cat['g-i'].max()+0.1)
+        self.ax_top.set_ylim(self.cat['g-r'].min()-0.1, 
+                             self.cat['g-r'].max()+0.1)
+        self.ax_bot.scatter(
+            self.cat['r_e'], self.cat.mu_e_ave_forced_g, alpha=0.3)
+        self.ax_bot.set_xlabel(
+            r'$r_\mathrm{eff}\ \mathrm{[arcsec]}$', fontsize=fs)
+        self.ax_bot.set_ylabel(
+            r'$\langle\mu_e(g)\rangle\ \mathrm{[mag/arcsec^2]}$', fontsize=fs)
+        self.ax_bot.set_xlim(0, 16)
+        self.ax_bot.set_ylim(24, 29)
         self.p1 = None
         self.p2 = None
 
@@ -204,6 +207,10 @@ class GUI(object):
 
     def _load_cat(self, cat_fn):
         self.cat = pd.read_csv(cat_fn)
+        self.cat['g-i'] = self.cat.m_tot_forced_g - self.cat.m_tot 
+        self.cat['g-i'] = self.cat['g-i'] - self.cat.A_g + self.cat.A_i
+        self.cat['g-r'] = self.cat.m_tot_forced_g - self.cat.m_tot_forced_r
+        self.cat['g-r'] = self.cat['g-r'] - self.cat.A_g + self.cat.A_r
         self.cat['candy'] = -1
         self.cat['junk'] = -1
         self.cat['tidal'] = -1
@@ -258,25 +265,24 @@ class GUI(object):
         self.p1 = self.ax_top.scatter(self.cat.loc[idx, 'g-i'], 
                                       self.cat.loc[idx, 'g-r'], 
                                       c='k', s=300, marker='*', edgecolor='k')
-        self.p2 = self.ax_bot.scatter(self.cat.loc[idx, 'FLUX_RADIUS(i)']*0.168, 
-                                      self.cat.loc[idx, 'mu_aper_0(g)'],
+        self.p2 = self.ax_bot.scatter(self.cat.loc[idx, 'r_e'],
+                                      self.cat.loc[idx, 'mu_e_ave_forced_g'],
                                       c='k', s=300, marker='*', edgecolor='k')
         self.canvas.draw()
 
     def update_info(self):
-        txt = 'r_eff: {:.2f}\"    mu_0(g): {:.2f}    g-i: {:.2f}'
-        txt += '    g-r: {:.2f}    class: {}'
-        cols = ['r_e(g)', 'mu_0(g)', 'g-i', 'g-r']
+        txt = 'id = {}, mu_0(g) = {:.2f}, n = {:.3f}, flag = {}' 
+        cols = ['id', 'mu_0_forced_g', 'n']
         flag_cols = cols + self.flags
         info = self.cat.ix[self.current_idx, flag_cols]
-        size, mu, gi, gr = info[cols]
+        ID, mu, n = info[cols]
         flags = info[self.flags]
         flag = flags[flags==1]
         if len(flag)==1:
             flag = flag.index[0]
         else:
             flag = 'n/a'
-        txt = txt.format(size, mu, gi, gr, flag)
+        txt = txt.format(ID, mu, n, flag)
         self.status.config(state='normal')
         self.status.delete(1.0, 'end')
         self.status.insert('insert', txt)
