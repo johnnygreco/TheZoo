@@ -271,18 +271,18 @@ class GUI(object):
         self.canvas.draw()
 
     def update_info(self):
-        txt = 'id = {}, mu_0(g) = {:.2f}, n = {:.3f}, flag = {}' 
-        cols = ['id', 'mu_0_forced_g', 'n']
+        txt = 'id = {}, mu_0(g) = {:.2f}, n = {:.3f}, ell = {:.3f}, flag = {}' 
+        cols = ['id', 'mu_0_forced_g', 'n', 'ell']
         flag_cols = cols + self.flags
         info = self.cat.ix[self.current_idx, flag_cols]
-        ID, mu, n = info[cols]
+        ID, mu, n, ell = info[cols]
         flags = info[self.flags]
         flag = flags[flags==1]
         if len(flag)==1:
             flag = flag.index[0]
         else:
             flag = 'n/a'
-        txt = txt.format(ID, mu, n, flag)
+        txt = txt.format(ID, mu, n, ell, flag)
         self.status.config(state='normal')
         self.status.delete(1.0, 'end')
         self.status.insert('insert', txt)
