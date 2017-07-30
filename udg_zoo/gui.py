@@ -33,7 +33,7 @@ class GUI(object):
         self.master = master
         self.save_delta_t = 5 # minutes
         self.current_idx = 0
-        self.flags = ['candy', 'junk', 'tidal', 'ambiguous']
+        self.flags = ['candy', 'junk', 'tidal', 'cirrus']
         self.master.withdraw()
         self.review = review
         self.io = io if io else default_io
@@ -171,8 +171,8 @@ class GUI(object):
             tidal_button.image = tidal_img 
             tidal_button.grid(row=0, column=2, sticky='w', padx=padx)
 
-            question_flag = partial(self.set_flag, 'ambiguous')
-            fn = os.path.join(filedir, 'buttons/question-mark.gif')
+            question_flag = partial(self.set_flag, 'cirrus')
+            fn = os.path.join(filedir, 'buttons/cirrus.gif')
             question_img = tk.PhotoImage(file=fn)
             question_button = tk.Button(
                 mid_fr, image=question_img, width='100', 
@@ -214,7 +214,7 @@ class GUI(object):
         self.cat['candy'] = -1
         self.cat['junk'] = -1
         self.cat['tidal'] = -1
-        self.cat['ambiguous'] = -1
+        self.cat['cirrus'] = -1
         self.cat['notes'] = " "
 
     def next_idx(self, event=None):
