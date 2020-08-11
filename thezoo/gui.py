@@ -1,11 +1,13 @@
 from __future__ import division, print_function
 
+
 import os, sys
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox
 from functools import partial
 import webbrowser
+
 
 import numpy as np
 import matplotlib 
@@ -16,33 +18,47 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-
-from .utils import hsc_map_url
 filedir = os.path.dirname(__file__)
-maindir = os.path.dirname(filedir)
-default_io = os.path.join(maindir, 'io')
+
 
 __all__ = ['GUI']
 
+
 class GUI(object):
 
-    def __init__(self, root, master, review, clobber=False, io=None):
+    def __init__(self, root, master, review, cat_file_name, figure_list,
+                 out_path, plot_1_cols, plot_2_cols, plot_1_labels=None, 
+                 plot_2_labels=None, radec_cols=['ra', 'dec'], clobber=False):
 
         # initialize attributes
         self.root = root
         self.master = master
         self.save_delta_t = 5 # minutes
         self.current_idx = 0
-        self.flags = ['candy', 'junk', 'tidal', 'cirrus']
+        self.flags = ['candy', 'junk', 'wut']
         self.master.withdraw()
         self.review = review
-        self.io = io if io else default_io
+        self.out_path = out_path
+        self.figure_list = np.loadtxt(figure_list, dtype=str)
+        self.radec_cols = radec_cols
+
+        self.x1, self.y1 = plot_1_cols
+        self.x2, self.y2 = plot_2_cols
+        if plot_1_labels is None:
+            self.x1_lab, self.y1_lab = plot_1_cols
+            self.x1_lab = self.x1_lab.replace('_', ' ')
+        else:
+            self.x1_lab, self.y1_lab = plot_1_labels
+        if plot_2_labels is None:
+            self.x2_lab, self.y2_lab = plot_2_cols
+            self.x2_lab = self.x2_lab.replace('_', ' ')
+        else:
+            self.x2_lab, self.y2_lab = plot_2_labels
 
         # setup file names 
-        # TODO -- make this a cmd line arg
-        self.cat_fn = os.path.join(self.io, 'candy.csv')
-        self.out_fn = os.path.join(
-            self.io, 'viz-results-'+self.cat_fn.split('/')[-1])
+        self.cat_fn = cat_file_name
+        base_fn = os.path.basename(cat_file_name)
+        self.out_fn = os.path.join(out_path, 'thezoo-' + base_fn)
 
         # if output catalog exists, check if we want to reload progress
         if os.path.isfile(self.out_fn) and not clobber:
@@ -50,14 +66,14 @@ class GUI(object):
                 self.cat = pd.read_csv(self.out_fn)
             else:
                 msg = 'Catalog exists. Want to start where you left off?'
-                answer = messagebox.askyesno('HSC-HUGs Message', msg)
+                answer = messagebox.askyesno('TheZoo PSA', msg)
                                         
                 if answer:
                     self.cat = pd.read_csv(self.out_fn)
                     flagged = self.cat['candy']==-1
                     if flagged.sum()==0:
                         msg = 'All sources have been classified.'
-                        messagebox.showinfo('HSC-HUGs Message', msg)
+                        messagebox.showinfo('TheZoo PSA', msg)
                         sys.exit('Exiting without changing anything...')
                     self.current_idx = self.cat[flagged].index[0]
                 else:
@@ -70,6 +86,9 @@ class GUI(object):
                         sys.exit('Exiting without changing anything...')
         else:
             self._load_cat(self.cat_fn)
+
+        msg = 'The Number of figures must match the catalog length'
+        assert len(self.cat) == len(self.figure_list), msg
 
         # build figure
         fs = 15
@@ -85,21 +104,21 @@ class GUI(object):
             grid[0:2, 0:2], xticks=[], yticks=[])
         self.ax_top = self.fig.add_subplot(grid[0,2])
         self.ax_bot = self.fig.add_subplot(grid[1,2])
-        self.ax_top.scatter(self.cat['g-i'], self.cat['g-r'], alpha=0.3)
-        self.ax_top.set_xlabel('$g-i$', fontsize=fs)
-        self.ax_top.set_ylabel('$g-r$', fontsize=fs)
-        self.ax_top.set_xlim(self.cat['g-i'].min()-0.1, 
-                             self.cat['g-i'].max()+0.1)
-        self.ax_top.set_ylim(self.cat['g-r'].min()-0.1, 
-                             self.cat['g-r'].max()+0.1)
+        self.ax_top.scatter(self.cat[self.x1], self.cat[self.y1], alpha=0.3)
+        self.ax_top.set_xlabel(self.x1_lab, fontsize=fs)
+        self.ax_top.set_ylabel(self.y1_lab, fontsize=fs)
+        self.ax_top.set_xlim(self.cat[self.x1].min() - 0.1, 
+                             self.cat[self.x1].max() + 0.1)
+        self.ax_top.set_ylim(self.cat[self.y1].min() - 0.1, 
+                             self.cat[self.y1].max() + 0.1)
         self.ax_bot.scatter(
-            self.cat['r_e'], self.cat.mu_e_ave_forced_g, alpha=0.3)
-        self.ax_bot.set_xlabel(
-            r'$r_\mathrm{eff}\ \mathrm{[arcsec]}$', fontsize=fs)
-        self.ax_bot.set_ylabel(
-            r'$\langle\mu_e(g)\rangle\ \mathrm{[mag/arcsec^2]}$', fontsize=fs)
-        self.ax_bot.set_xlim(0, 16)
-        self.ax_bot.set_ylim(24, 29)
+            self.cat[self.x2], self.cat[self.y2], alpha=0.3)
+        self.ax_bot.set_xlabel(self.x2_lab, fontsize=fs)
+        self.ax_bot.set_ylabel(self.y2_lab, fontsize=fs)
+        self.ax_bot.set_xlim(self.cat[self.x2].min() - 0.1, 
+                             self.cat[self.x2].max() + 0.1)
+        self.ax_bot.set_ylim(self.cat[self.y2].min() - 0.1, 
+                             self.cat[self.y2].max() + 0.1)
         self.p1 = None
         self.p2 = None
 
@@ -162,23 +181,14 @@ class GUI(object):
             noise_button.image = noise_img
             noise_button.grid(row=0, column=1, sticky='w', padx=padx)
 
-            tidal_flag = partial(self.set_flag, 'tidal')
-            fn = os.path.join(filedir, 'buttons/tidal.gif')
-            tidal_img = tk.PhotoImage(file=fn)
-            tidal_button = tk.Button(
-                mid_fr, image=tidal_img, width='100', 
-                height='100', command=tidal_flag)
-            tidal_button.image = tidal_img 
-            tidal_button.grid(row=0, column=2, sticky='w', padx=padx)
-
-            question_flag = partial(self.set_flag, 'cirrus')
-            fn = os.path.join(filedir, 'buttons/cirrus.gif')
+            question_flag = partial(self.set_flag, 'wut')
+            fn = os.path.join(filedir, 'buttons/question-mark.gif')
             question_img = tk.PhotoImage(file=fn)
             question_button = tk.Button(
                 mid_fr, image=question_img, width='100', 
                 height='100', command=question_flag)
             question_button.image = question_img 
-            question_button.grid(row=0, column=3, sticky='w', padx=padx)
+            question_button.grid(row=0, column=2, sticky='w', padx=padx)
 
             save_button = tk.Button(
                 top_fr, text='Save Progess', command=self.save_progress)
@@ -186,7 +196,7 @@ class GUI(object):
 
         # create top buttons
         hmap_button = tk.Button(
-            top_fr, text='hscMap', command=self.hsc_map)
+            top_fr, text='Legacy Viewer', command=self.legacy_viewer)
         hmap_button.pack(side='left', padx=padx)
 
         quit_button = tk.Button(top_fr, text='Quit', command=self.quit)
@@ -207,25 +217,18 @@ class GUI(object):
 
     def _load_cat(self, cat_fn):
         self.cat = pd.read_csv(cat_fn)
-        self.cat['g-i'] = self.cat.m_tot_forced_g - self.cat.m_tot 
-        self.cat['g-i'] = self.cat['g-i'] - self.cat.A_g + self.cat.A_i
-        self.cat['g-r'] = self.cat.m_tot_forced_g - self.cat.m_tot_forced_r
-        self.cat['g-r'] = self.cat['g-r'] - self.cat.A_g + self.cat.A_r
+        self.cat['id'] = np.arange(len(self.cat))
         self.cat['candy'] = -1
         self.cat['junk'] = -1
-        self.cat['tidal'] = -1
-        self.cat['cirrus'] = -1
+        self.cat['wut'] = -1
         self.cat['notes'] = " "
 
     def next_idx(self, event=None):
         self.add_note()
         self.current_idx += 1
-        if self.current_idx > (len(self.cat)-1):
+        if self.current_idx > (len(self.cat) - 1):
             msg = 'Congrats, visual inspection complete!'
-            w = tk.Tk()
-            w.withdraw()
-            messagebox.showinfo('HSC-HUGs Message', msg, parent=w)
-            w.destroy()
+            messagebox.showinfo('TheZoo PSA', msg)
             self.quit()
         else:
             self.idx_evar.set(self.current_idx)
@@ -246,43 +249,44 @@ class GUI(object):
         self.note_evar.set(self.cat.loc[self.current_idx, 'notes'])
         self.display_image()
 
-    def hsc_map(self):
-        ra, dec = self.cat.loc[self.current_idx, ['ra', 'dec']]
-        webbrowser.open(hsc_map_url(ra, dec), new=1)
+    def legacy_viewer(self):
+        ra, dec = self.cat.loc[self.current_idx, self.radec_cols]
+        url = 'https://www.legacysurvey.org/viewer?'
+        url += f'ra={ra}&dec={dec}&layer=dr8&zoom=14'
+        webbrowser.open(url, new=1)
 
     def display_image(self):
         self.update_info()
         self.ax_img.cla()
         self.ax_img.set(xticks=[], yticks=[])
-        fn = 'images/candy-{}.png'.format(self.current_idx)
-        image = mpimg.imread(os.path.join(self.io, fn))
+        image = mpimg.imread(self.figure_list[self.current_idx])
         self.ax_img.imshow(image)
 
         idx = self.current_idx
         if self.p1 is not None:
             self.p1.remove()
             self.p2.remove()
-        self.p1 = self.ax_top.scatter(self.cat.loc[idx, 'g-i'], 
-                                      self.cat.loc[idx, 'g-r'], 
+
+        self.p1 = self.ax_top.scatter(self.cat.loc[idx, self.x1], 
+                                      self.cat.loc[idx, self.y1], 
                                       c='k', s=300, marker='*', edgecolor='k')
-        self.p2 = self.ax_bot.scatter(self.cat.loc[idx, 'r_e'],
-                                      self.cat.loc[idx, 'mu_e_ave_forced_g'],
+        self.p2 = self.ax_bot.scatter(self.cat.loc[idx, self.x2],
+                                      self.cat.loc[idx, self.y2],
                                       c='k', s=300, marker='*', edgecolor='k')
         self.canvas.draw()
 
     def update_info(self):
-        txt = 'id = {}, mu_0(g) = {:.2f}, n = {:.3f}, ell = {:.3f}, flag = {}' 
-        cols = ['id', 'mu_0_forced_g', 'n', 'ell']
+        txt = 'id = {}, flag = {}' 
+        cols = ['id'] 
         flag_cols = cols + self.flags
-        info = self.cat.ix[self.current_idx, flag_cols]
-        ID, mu, n, ell = info[cols]
+        info = self.cat[flag_cols].loc[self.current_idx]
         flags = info[self.flags]
         flag = flags[flags==1]
         if len(flag)==1:
             flag = flag.index[0]
         else:
             flag = 'n/a'
-        txt = txt.format(ID, mu, n, ell, flag)
+        txt = txt.format(info['id'], flag)
         self.status.config(state='normal')
         self.status.delete(1.0, 'end')
         self.status.insert('insert', txt)

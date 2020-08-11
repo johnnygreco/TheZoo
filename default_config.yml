@@ -1,0 +1,11 @@
+cat_file_name: '/Users/jgreco/Downloads/LSB_short_mag18_res20.csv'
+
+figure_list: '/Users/jgreco/Desktop/figlist.txt'
+
+out_path: '/Users/jgreco/Desktop'
+
+plot_1_cols: ['RA', 'DEC']
+
+plot_2_cols: ['RA', 'DEC']
+
+radec_cols: ['RA', 'DEC']

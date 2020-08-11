@@ -1,29 +1,51 @@
 #!/usr/bin/env python 
 
+
 import tkinter as tk
+import numpy as np
 from argparse import ArgumentParser
-from udg_zoo import GUI
+import yaml
+from thezoo import GUI
+
 
 parser = ArgumentParser(__file__)
+parser.add_argument('-c', '--config', required=True, 
+                    help='configuration file')
 parser.add_argument('-r', '--review', action='store_true', 
                     help='review without classification')
-parser.add_argument('-c', '--clobber', action='store_true', 
+parser.add_argument('--clobber', action='store_true', 
                     help='delete previous progress without warning')
-parser.add_argument('--io', type=str, default=None,
-                    help='input/output directory path (udg-zoo/io by default)')
 args = parser.parse_args()
 
-title = u'hugs-pipe viz inspect'
+
+with open(args.config, 'r') as fn:
+    config = yaml.load(fn, Loader=yaml.FullLoader)
+
+
+title = u'WeLcOMe To TheZoo'
 if args.review:
     title += ' (reviewing)'
+
 
 root = tk.Tk()
 root.withdraw()
 top = tk.Toplevel(root)
 top.protocol("WM_DELETE_WINDOW", root.destroy)
 top.title(title)
-gui = GUI(root, top, args.review, args.clobber, args.io)
+gui = GUI(
+    root=root, 
+    master=top, 
+    review=args.review, 
+    cat_file_name=config['cat_file_name'], 
+    figure_list=config['figure_list'],
+    out_path=config['out_path'],
+    plot_1_cols=config['plot_1_cols'],
+    plot_2_cols=config['plot_2_cols'],
+    radec_cols=config['radec_cols'],
+    clobber=args.clobber
+)
 
+         
 while True:
     try:
         root.mainloop()
