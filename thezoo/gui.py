@@ -44,16 +44,16 @@ class GUI(object):
 
         self.x1, self.y1 = plot_1_cols
         self.x2, self.y2 = plot_2_cols
-        if plot_1_labels is None:
-            self.x1_lab, self.y1_lab = plot_1_cols
-            self.x1_lab = self.x1_lab.replace('_', ' ')
-        else:
+
+        if plot_1_labels is not None:
             self.x1_lab, self.y1_lab = plot_1_labels
-        if plot_2_labels is None:
-            self.x2_lab, self.y2_lab = plot_2_cols
-            self.x2_lab = self.x2_lab.replace('_', ' ')
         else:
+            self.x1_lab, self.y1_lab = plot_1_cols
+
+        if plot_2_labels is not None:
             self.x2_lab, self.y2_lab = plot_2_labels
+        else:
+            self.x2_lab, self.y2_lab = plot_2_cols
 
         # setup file names 
         self.cat_fn = cat_file_name

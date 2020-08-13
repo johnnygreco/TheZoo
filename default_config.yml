@@ -1,11 +1,19 @@
-cat_file_name: '/Users/jgreco/Downloads/LSB_short_mag18_res20.csv'
+# full path to input catalog
+catalog: '/Users/jgreco/Downloads/test.csv'
 
-figure_list: '/Users/jgreco/Desktop/figlist.txt'
+# full path to figure list file
+figures: '/Users/jgreco/Desktop/figlist.txt'
 
-out_path: '/Users/jgreco/Desktop'
+# if None (~), will use same path as catalog
+out_path: ~ 
 
-plot_1_cols: ['RA', 'DEC']
+# plot parameters
+x1: 'g-i'
+y1: 'g-r'
 
-plot_2_cols: ['RA', 'DEC']
+x2: 'r_e'
+y2: 'mag_auto'
 
-radec_cols: ['RA', 'DEC']
+# ra, dec column names
+ra_col: 'ra' 
+dec_col: 'dec'

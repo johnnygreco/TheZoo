@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 
-
+import os
 import tkinter as tk
 import numpy as np
 from argparse import ArgumentParser
@@ -22,9 +22,15 @@ with open(args.config, 'r') as fn:
     config = yaml.load(fn, Loader=yaml.FullLoader)
 
 
-title = u'WeLcOMe To TheZoo'
+title = u'WeLcOMe tO TheZoo'
 if args.review:
     title += ' (reviewing)'
+
+
+if config['out_path'] is None:
+    out_path = os.path.dirname(config['catalog'])
+else:
+    out_path = config['out_path']
 
 
 root = tk.Tk()
@@ -36,12 +42,12 @@ gui = GUI(
     root=root, 
     master=top, 
     review=args.review, 
-    cat_file_name=config['cat_file_name'], 
-    figure_list=config['figure_list'],
-    out_path=config['out_path'],
-    plot_1_cols=config['plot_1_cols'],
-    plot_2_cols=config['plot_2_cols'],
-    radec_cols=config['radec_cols'],
+    cat_file_name=config['catalog'], 
+    figure_list=config['figures'],
+    out_path=out_path,
+    plot_1_cols=[config['x1'], config['y1']],
+    plot_2_cols=[config['x2'], config['y2']],
+    radec_cols=[config['ra_col'], config['dec_col']],
     clobber=args.clobber
 )
 
